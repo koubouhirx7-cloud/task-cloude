@@ -197,6 +197,69 @@
             margin-top: 5px;
         }
 
+        .image-drop-zone {
+            border: 2px dashed rgba(255,255,255,0.3);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(255,255,255,0.05);
+            min-height: 90px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .image-drop-zone:hover, .image-drop-zone.dragover {
+            border-color: #00b4d8;
+            background: rgba(0,180,216,0.1);
+        }
+        .image-drop-hint { color: rgba(255,255,255,0.7); line-height: 1.6; }
+        .image-preview-area {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            width: 100%;
+        }
+        .image-thumb-wrap {
+            position: relative;
+            width: 80px;
+            height: 80px;
+        }
+        .image-thumb {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 2px solid rgba(255,255,255,0.2);
+        }
+        .image-thumb-remove {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+            cursor: pointer;
+            line-height: 20px;
+            text-align: center;
+            padding: 0;
+        }
+        .analyzing-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #7b2ff7, #00b4d8);
+            color: white;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+
         .emoji-icon {
             font-size: 24px;
             margin-right: 8px;
@@ -285,6 +348,24 @@
                     <div class="hint">詳しく書くほど、秘書AIが正確に理解します</div>
                 </div>
 
+                <!-- 画像アップロード -->
+                <div class="form-group">
+                    <label>
+                        <span class="emoji-icon">📸</span>
+                        画像・スクリーンショット（任意）
+                    </label>
+                    <div id="imageDropZone" class="image-drop-zone" onclick="document.getElementById('imageInput').click()">
+                        <div id="imagePreviewArea" class="image-preview-area" style="display:none;"></div>
+                        <div id="imageDropHint" class="image-drop-hint">
+                            <span style="font-size:2rem;">🖼</span><br>
+                            タップして画像を選択<br>
+                            <span style="font-size:0.75rem; opacity:0.7;">スクリーンショット・デザイン案・メモ写真など</span>
+                        </div>
+                    </div>
+                    <input type="file" id="imageInput" accept="image/*" multiple style="display:none">
+                    <div class="hint" id="imageAnalysisStatus">Claude AIが画像を自動解析し、タスク要件を抽出します</div>
+                </div>
+
                 <!-- 期限 -->
                 <div class="form-group">
                     <label>
@@ -332,10 +413,81 @@
         const form = document.getElementById('taskForm');
         const successMessage = document.getElementById('successMessage');
 
+        // ─── 画像管理 ───
+        let uploadedImages = []; // { file, dataUrl, base64, media_type }
+
+        const imageInput = document.getElementById('imageInput');
+        const imageDropZone = document.getElementById('imageDropZone');
+        const imagePreviewArea = document.getElementById('imagePreviewArea');
+        const imageDropHint = document.getElementById('imageDropHint');
+        const imageAnalysisStatus = document.getElementById('imageAnalysisStatus');
+
+        imageInput.addEventListener('change', (e) => handleFiles(e.target.files));
+
+        imageDropZone.addEventListener('dragover', (e) => { e.preventDefault(); imageDropZone.classList.add('dragover'); });
+        imageDropZone.addEventListener('dragleave', () => imageDropZone.classList.remove('dragover'));
+        imageDropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            imageDropZone.classList.remove('dragover');
+            handleFiles(e.dataTransfer.files);
+        });
+        // ドロップゾーンのクリックはinputに委譲（ただしサムネクリックは除外）
+        imageDropZone.addEventListener('click', (e) => {
+            if (!e.target.closest('.image-thumb-wrap')) imageInput.click();
+        });
+
+        function handleFiles(files) {
+            Array.from(files).forEach(file => {
+                if (!file.type.startsWith('image/')) return;
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    const dataUrl = ev.target.result;
+                    const base64 = dataUrl.split(',')[1];
+                    uploadedImages.push({ file, dataUrl, base64, media_type: file.type });
+                    renderPreviews();
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function renderPreviews() {
+            imagePreviewArea.innerHTML = '';
+            uploadedImages.forEach((img, idx) => {
+                const wrap = document.createElement('div');
+                wrap.className = 'image-thumb-wrap';
+                wrap.innerHTML = `
+                    <img class="image-thumb" src="${img.dataUrl}" alt="preview">
+                    <button class="image-thumb-remove" type="button" onclick="removeImage(${idx})">×</button>`;
+                imagePreviewArea.appendChild(wrap);
+            });
+            if (uploadedImages.length > 0) {
+                imagePreviewArea.style.display = 'flex';
+                imageDropHint.style.display = 'none';
+                imageAnalysisStatus.innerHTML = `<span class="analyzing-badge">🤖 Claude AIが送信時に解析します</span>`;
+            } else {
+                imagePreviewArea.style.display = 'none';
+                imageDropHint.style.display = 'block';
+                imageAnalysisStatus.textContent = 'Claude AIが画像を自動解析し、タスク要件を抽出します';
+            }
+        }
+
+        window.removeImage = function(idx) {
+            uploadedImages.splice(idx, 1);
+            renderPreviews();
+        };
+
+        // ─── フォーム送信 ───
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
 
-            // フォームデータを収集
+            const submitBtn = form.querySelector('.btn-submit');
+            submitBtn.disabled = true;
+            submitBtn.textContent = uploadedImages.length > 0 ? '🤖 AI解析中...' : '送信中...';
+
+            if (uploadedImages.length > 0) {
+                imageAnalysisStatus.innerHTML = `<span class="analyzing-badge">🤖 Claude AIが画像を解析中...</span>`;
+            }
+
             const taskData = {
                 timestamp: new Date().toISOString(),
                 name: document.getElementById('taskName').value,
@@ -343,37 +495,48 @@
                 category: document.getElementById('category').value,
                 description: document.getElementById('description').value,
                 deadline: document.getElementById('deadline').value,
-                scope: document.getElementById('scope').value
+                scope: document.getElementById('scope').value,
+                images: uploadedImages.map(img => ({
+                    media_type: img.media_type,
+                    data: img.base64
+                }))
             };
 
             try {
-                // ローカルストレージに保存
                 const tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
-                tasks.push(taskData);
+                tasks.push({ ...taskData, images: `${taskData.images.length}枚` });
                 localStorage.setItem('tasks', JSON.stringify(tasks));
 
-                // ファイルに保存（サーバー経由）
                 const response = await fetch('/api/save_task', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(taskData)
-                }).catch(() => null); // ローカルでは失敗するかもしれないので許容
+                }).catch(() => null);
 
-                // 成功メッセージ表示
+                let msg = '✅ タスクを受け取りました！<br>秘書AIが詳細を解析しています...';
+                if (response && response.ok) {
+                    const result = await response.json().catch(() => ({}));
+                    if (result.image_analyzed) {
+                        msg = '✅ タスク＆画像を解析完了！<br>🤖 Discordに分析結果を送信しました';
+                    }
+                }
+                successMessage.innerHTML = msg;
                 successMessage.classList.add('show');
 
-                // フォームリセット
                 setTimeout(() => {
                     form.reset();
+                    uploadedImages = [];
+                    renderPreviews();
                     successMessage.classList.remove('show');
-                }, 2000);
-
-                // コンソールに出力（デバッグ）
-                console.log('Task submitted:', taskData);
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = '送信';
+                }, 3000);
 
             } catch (error) {
-                console.error('Error saving task:', error);
+                console.error('Error:', error);
                 alert('エラーが発生しました。もう一度お試しください。');
+                submitBtn.disabled = false;
+                submitBtn.textContent = '送信';
             }
         });
 
