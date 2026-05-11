@@ -1,0 +1,47 @@
+# 環境・機密情報
+.env
+.env.local
+.env.production
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ローカルタスクデータ（クラウド側では使用しない）
+tasks/
+processed/
+
+# ログファイル
+*.log
+logs/
+
+# その他
+.pytest_cache/
+.coverage
+htmlcov/
