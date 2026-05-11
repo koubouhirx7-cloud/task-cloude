@@ -1,0 +1,10 @@
+*.py
+requirements.txt
+Procfile
+runtime.txt
+__pycache__/
+.env
+tasks/
+.git/
+node_modules/
+*.md
