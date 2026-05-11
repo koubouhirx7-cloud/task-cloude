@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ハイランダー タスク入力</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+
+        input[type="text"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #ecf0f1;
+            border-radius: 12px;
+            font-size: 16px;
+            font-family: inherit;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        input[type="text"]:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+            font-family: 'Menlo', 'Courier', monospace;
+            font-size: 14px;
+        }
+
+        select {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23667eea' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            padding-right: 35px;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .radio-option {
+            flex: 1;
+        }
+
+        .radio-option input[type="radio"] {
+            display: none;
+        }
+
+        .radio-option label {
+            display: block;
+            padding: 10px;
+            border: 2px solid #ecf0f1;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 0;
+        }
+
+        .radio-option input[type="radio"]:checked + label {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 30px;
+        }
+
+        button {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-submit {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-submit:active {
+            transform: scale(0.98);
+        }
+
+        .btn-reset {
+            background: #ecf0f1;
+            color: #2c3e50;
+        }
+
+        .btn-reset:active {
+            background: #d5dbf8;
+        }
+
+        .success-message {
+            display: none;
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+            margin-top: 20px;
+            font-weight: 600;
+        }
+
+        .success-message.show {
+            display: block;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .hint {
+            font-size: 12px;
+            color: #95a5a6;
+            margin-top: 5px;
+        }
+
+        .emoji-icon {
+            font-size: 24px;
+            margin-right: 8px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            background: #ecf0f1;
+            border-radius: 6px;
+            font-size: 11px;
+            margin-left: auto;
+        }
+
+        .required {
+            color: #e74c3c;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚀 ハイランダー</h1>
+            <p class="subtitle">タスク入力画面</p>
+        </header>
+
+        <div class="card">
+            <form id="taskForm">
+                <!-- タスク名 -->
+                <div class="form-group">
+                    <label>
+                        <span class="emoji-icon">📝</span>
+                        タスク名 <span class="required">*</span>
+                    </label>
+                    <input type="text" id="taskName" placeholder="例: LPを作成してください" required>
+                    <div class="hint">短く、分かりやすく（30文字以内推奨）</div>
+                </div>
+
+                <!-- 優先度 -->
+                <div class="form-group">
+                    <label>
+                        <span class="emoji-icon">⚡</span>
+                        優先度
+                    </label>
+                    <div class="radio-group">
+                        <div class="radio-option">
+                            <input type="radio" id="priority-high" name="priority" value="high">
+                            <label for="priority-high">🔴 高</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" id="priority-medium" name="priority" value="medium" checked>
+                            <label for="priority-medium">🟡 中</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" id="priority-low" name="priority" value="low">
+                            <label for="priority-low">🟢 低</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 分野 -->
+                <div class="form-group">
+                    <label>
+                        <span class="emoji-icon">🏷️</span>
+                        分野 <span class="required">*</span>
+                    </label>
+                    <select id="category" required>
+                        <option value="">選択してください</option>
+                        <option value="web">🌐 Web/LP開発</option>
+                        <option value="agent">🤖 AI エージェント</option>
+                        <option value="integration">🔗 システム統合</option>
+                        <option value="automation">⚙️ 自動化</option>
+                        <option value="document">📄 ドキュメント</option>
+                        <option value="design">🎨 デザイン</option>
+                        <option value="other">📦 その他</option>
+                    </select>
+                </div>
+
+                <!-- 詳細説明 -->
+                <div class="form-group">
+                    <label>
+                        <span class="emoji-icon">📋</span>
+                        詳細説明 <span class="required">*</span>
+                    </label>
+                    <textarea id="description" placeholder="詳しく説明してください。要件、仕様、デザイン、期限など。秘書AIが自動解析します。" required></textarea>
+                    <div class="hint">詳しく書くほど、秘書AIが正確に理解します</div>
+                </div>
+
+                <!-- 期限 -->
+                <div class="form-group">
+                    <label>
+                        <span class="emoji-icon">📅</span>
+                        期限（目安）
+                    </label>
+                    <input type="text" id="deadline" placeholder="例: 3日以内、今週末など">
+                    <div class="hint">営業日で計算します</div>
+                </div>
+
+                <!-- 予算/スコープ -->
+                <div class="form-group">
+                    <label>
+                        <span class="emoji-icon">💰</span>
+                        スコープ
+                    </label>
+                    <select id="scope">
+                        <option value="small">小 (1～2時間)</option>
+                        <option value="medium" selected>中 (3～8時間)</option>
+                        <option value="large">大 (1日以上)</option>
+                        <option value="unknown">不明</option>
+                    </select>
+                </div>
+
+                <!-- ボタン -->
+                <div class="button-group">
+                    <button type="submit" class="btn-submit">送信</button>
+                    <button type="reset" class="btn-reset">クリア</button>
+                </div>
+
+                <div class="success-message" id="successMessage">
+                    ✅ タスクを受け取りました！<br>
+                    秘書AIが詳細を解析しています...
+                </div>
+            </form>
+        </div>
+
+        <div style="text-align: center; color: rgba(255,255,255,0.7); margin-top: 30px; font-size: 12px;">
+            <p>このタスクは自動的に処理されます</p>
+            <p>📧 タスク履歴: ~/Documents/会計情報/tasks/</p>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('taskForm');
+        const successMessage = document.getElementById('successMessage');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            // フォームデータを収集
+            const taskData = {
+                timestamp: new Date().toISOString(),
+                name: document.getElementById('taskName').value,
+                priority: document.querySelector('input[name="priority"]:checked').value,
+                category: document.getElementById('category').value,
+                description: document.getElementById('description').value,
+                deadline: document.getElementById('deadline').value,
+                scope: document.getElementById('scope').value
+            };
+
+            try {
+                // ローカルストレージに保存
+                const tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+                tasks.push(taskData);
+                localStorage.setItem('tasks', JSON.stringify(tasks));
+
+                // ファイルに保存（サーバー経由）
+                const response = await fetch('/save_task', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(taskData)
+                }).catch(() => null); // ローカルでは失敗するかもしれないので許容
+
+                // 成功メッセージ表示
+                successMessage.classList.add('show');
+
+                // フォームリセット
+                setTimeout(() => {
+                    form.reset();
+                    successMessage.classList.remove('show');
+                }, 2000);
+
+                // コンソールに出力（デバッグ）
+                console.log('Task submitted:', taskData);
+
+            } catch (error) {
+                console.error('Error saving task:', error);
+                alert('エラーが発生しました。もう一度お試しください。');
+            }
+        });
+
+        // QR コード表示（オプション）
+        console.log(`
+        📱 このページをブックマークするか、
+        以下のリンクを QR コードで共有：
+        http://localhost:8888/task_input.html
+        `);
+    </script>
+</body>
+</html>
