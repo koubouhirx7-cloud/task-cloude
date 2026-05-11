@@ -1,0 +1,22 @@
+{
+  "name": "highlander-task-input",
+  "version": "1.0.0",
+  "description": "Highlander Task Input System - Frontend (Vercel)",
+  "main": "task_input.html",
+  "scripts": {
+    "dev": "npx http-server",
+    "build": "mkdir -p public && cp task_input.html dashboard.html public/",
+    "start": "npx http-server public"
+  },
+  "keywords": [
+    "task",
+    "input",
+    "highlander",
+    "mobile"
+  ],
+  "author": "Highlander",
+  "license": "MIT",
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  }
+}
