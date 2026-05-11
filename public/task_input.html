@@ -353,7 +353,7 @@
                 localStorage.setItem('tasks', JSON.stringify(tasks));
 
                 // ファイルに保存（サーバー経由）
-                const response = await fetch('/save_task', {
+                const response = await fetch('/api/save_task', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(taskData)
